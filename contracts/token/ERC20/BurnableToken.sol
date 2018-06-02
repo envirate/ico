@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-import "./EIP20/EIP20.sol";
-import "./SafeMath.sol";
+import "./EIP20.sol";
+import "../../math/SafeMath.sol";
 
 /**
  * @title Burnable Token

@@ -1,9 +1,9 @@
 pragma solidity ^0.4.23;
 
 
-import "../SafeMath.sol";
+import "../../math/SafeMath.sol";
 import "./FinalizableCrowdsale.sol";
-import "../RefundVault.sol";
+import "./utils/RefundVault.sol";
 
 
 /**
@@ -35,8 +35,8 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
    * @dev Investors can claim refunds here if crowdsale is unsuccessful
    */
   function claimRefund() public {
-    require(isFinalized);
-    require(!goalReached());
+    require(isFinalized, "Sorry, the sale is not finished");
+    require(!goalReached(), "Sorry, the goal has been reached");
 
     vault.refund(msg.sender);
   }

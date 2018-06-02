@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-import "../SafeMath.sol";
-import "./TimedCrowdsale.sol";
+import "../../math/SafeMath.sol";
+import "../validation/TimedCrowdsale.sol";
 
 
 /**
@@ -21,8 +21,8 @@ contract FinalizableCrowdsale is TimedCrowdsale {
    * work. Calls the contract's finalization function.
    */
   function finalize() onlyOwner public {
-    require(!isFinalized);
-    require(hasClosed());
+    require(!isFinalized, "Sale has been already finalized");
+    require(hasClosed(), "Sale hasn't closed yet");
 
     finalization();
     emit Finalized();

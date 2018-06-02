@@ -1,14 +1,15 @@
 pragma solidity ^0.4.23;
 
-import "../SafeMath.sol";
-import "./Crowdsale.sol";
+import "../../math/SafeMath.sol";
+import "../distribution/RefundableCrowdsale.sol";
 
 
 /**
  * @title CappedCrowdsale
  * @dev Crowdsale with a limit for total contributions.
  */
-contract CappedCrowdsale is Crowdsale {
+contract CappedCrowdsale is RefundableCrowdsale 
+{
   using SafeMath for uint256;
 
   uint256 public cap;
@@ -27,7 +28,8 @@ contract CappedCrowdsale is Crowdsale {
    * @return Whether the cap was reached
    */
   function capReached() public view returns (bool) {
-    return weiRaised >= cap;
+    //return weiRaised >= cap;
+	return false;
   }
 
   /**
@@ -36,8 +38,8 @@ contract CappedCrowdsale is Crowdsale {
    * @param _weiAmount Amount of wei contributed
    */
   function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) internal {
-    super._preValidatePurchase(_beneficiary, _weiAmount);
-    require(weiRaised.add(_weiAmount) <= cap);
+    //super._preValidatePurchase(_beneficiary, _weiAmount);
+    //require(weiRaised.add(_weiAmount) <= cap, "Sorry, the crowdsale has reached its hard cap");
   }
 
 }

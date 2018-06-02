@@ -1,8 +1,8 @@
 pragma solidity ^0.4.23;
 
-import "../OwnToken.sol";
-import "../Ownable.sol";
-import "../SafeMath.sol";
+import "../token/ERC20/OwnToken.sol";
+import "../ownership/Ownable.sol";
+import "../math/SafeMath.sol";
 
 
 /**
@@ -47,9 +47,9 @@ contract Crowdsale is Ownable {
    * @param _token Address of the token being sold
    */
   constructor(uint256 _rate, address _wallet, OwnToken _token) public {
-    require(_rate > 0);
-    require(_wallet != address(0));
-    require(_token != address(0));
+    require(_rate > 0, "Invalid rate");
+    require(_wallet != address(0), "Invalid wallet address");
+    require(_token != address(0), "Invalid token address");
 
     rate = _rate;
     wallet = _wallet;
@@ -134,7 +134,7 @@ contract Crowdsale is Ownable {
    * @param _tokenAmount Number of tokens to be purchased
    */
   function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
-    _deliverTokens(_beneficiary, _tokenAmount);
+    //_deliverTokens(_beneficiary, _tokenAmount);
   }
 
   /**
