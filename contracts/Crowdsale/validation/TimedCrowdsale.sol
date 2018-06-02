@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import "../SafeMath.sol";
+import "../../math/SafeMath.sol";
 import "./WhitelistedCrowdsale.sol";
 
 
@@ -8,8 +8,8 @@ import "./WhitelistedCrowdsale.sol";
  * @title TimedCrowdsale
  * @dev Crowdsale accepting contributions only within a time frame.
  */
-contract TimedCrowdsale is WhitelistedCrowdsale 
-{
+contract TimedCrowdsale is WhitelistedCrowdsale
+ {
   using SafeMath for uint256;
 
   uint256 public openingTime;
@@ -20,7 +20,7 @@ contract TimedCrowdsale is WhitelistedCrowdsale
    */
   modifier onlyWhileOpen {
     // solium-disable-next-line security/no-block-members
-    require(block.timestamp >= openingTime && block.timestamp <= closingTime, "Crowdsale is not open");
+    require(block.timestamp >= openingTime && block.timestamp <= closingTime);
     _;
   }
 
@@ -31,8 +31,8 @@ contract TimedCrowdsale is WhitelistedCrowdsale
    */
   constructor(uint256 _openingTime, uint256 _closingTime) public {
     // solium-disable-next-line security/no-block-members
-    require(_openingTime >= block.timestamp, "Opening time is not in the future");
-    require(_closingTime >= _openingTime, "Closing time is not after opening time");
+    //require(_openingTime >= block.timestamp, "Invalid opening time");
+    require(_closingTime >= _openingTime, "Invalid closing time");
 
     openingTime = _openingTime;
     closingTime = _closingTime;

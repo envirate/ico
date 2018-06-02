@@ -1,7 +1,6 @@
 pragma solidity 0.4.23;
 
 import './BurnableToken.sol';
-//import 'contracts/EIP20/EIP20.sol';
 
 
 // maybe: CanReclaimToken, burnable
