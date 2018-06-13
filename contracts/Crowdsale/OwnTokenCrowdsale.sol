@@ -4,8 +4,9 @@ import '../token/ERC20/OwnToken.sol';
 import './distribution/RefundableCrowdsale.sol';
 import './validation/TimedCrowdsale.sol';
 import './validation/CappedCrowdsale.sol';
+import '../lifecycle/Pausable.sol';
 
-contract OwnTokenCrowdsale is CappedCrowdsale 
+contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale?
 {
 	using SafeMath for uint256;
 	
@@ -38,6 +39,15 @@ contract OwnTokenCrowdsale is CappedCrowdsale
 	   */
 	  function _processPurchase(address _beneficiary, uint256 _tokenAmount) internal {
 		toBeReceivedTokenAmounts[_beneficiary] = toBeReceivedTokenAmounts[_beneficiary].add(_tokenAmount);
+	  }
+	  
+	    /**
+	   * @dev Validation of an incoming purchase. Use require statements to revert state when conditions are not met. Use super to concatenate validations.
+	   * @param _beneficiary Address performing the token purchase
+	   * @param _weiAmount Value in wei involved in the purchase
+	   */
+	  function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) whenNotPaused internal {
+		super._preValidatePurchase(_beneficiary, _weiAmount);
 	  }
 		
 	
