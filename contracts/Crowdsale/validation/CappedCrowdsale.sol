@@ -18,7 +18,7 @@ contract CappedCrowdsale is RefundableCrowdsale
    * @dev Constructor, takes maximum amount of wei accepted in the crowdsale.
    * @param _cap Max amount of wei to be contributed
    */
-  function CappedCrowdsale(uint256 _cap) public {
+  constructor(uint256 _cap) public {
     require(_cap > 0);
     cap = _cap;
   }
@@ -28,8 +28,7 @@ contract CappedCrowdsale is RefundableCrowdsale
    * @return Whether the cap was reached
    */
   function capReached() public view returns (bool) {
-    //return weiRaised >= cap;
-	return false;
+    return weiRaised >= cap;
   }
 
   /**
@@ -38,8 +37,8 @@ contract CappedCrowdsale is RefundableCrowdsale
    * @param _weiAmount Amount of wei contributed
    */
   function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) internal {
-    //super._preValidatePurchase(_beneficiary, _weiAmount);
-    //require(weiRaised.add(_weiAmount) <= cap, "Sorry, the crowdsale has reached its hard cap");
+    super._preValidatePurchase(_beneficiary, _weiAmount);
+    require(weiRaised.add(_weiAmount) <= cap, "Sorry, the crowdsale has reached its hard cap");
   }
 
 }

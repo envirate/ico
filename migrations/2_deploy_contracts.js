@@ -1,29 +1,33 @@
-//const EnvTokenCrowdsale = artifacts.require('./EnvTokenCrowdsale.sol');
-const EnvToken = artifacts.require('./EnvToken.sol');
+const OwnTokenCrowdsale = artifacts.require('./OwnTokenCrowdsale.sol');
+const OwnToken = artifacts.require('./OwnToken.sol');
 
 module.exports = function(deployer, network, accounts) {
-    const openingTime = web3.eth.getBlock('latest').timestamp + 2; // two secs in the future
+    const openingTime = web3.eth.getBlock('latest').timestamp + 20; // two secs in the future
     const closingTime = openingTime + 86400 * 20; // 20 days
-    const rate = new web3.BigNumber(1000);
+    const rate = new web3.BigNumber(10000000000000 * 1.3);
     const wallet = accounts[1];
-	deployer.deploy(EnvToken, {gas: 4000000});
+	// 1000000000000000000 = 1 Eth
+	// 10000000000000 = 1 Eth / 100 000
+	const softGap = new web3.BigNumber(6000000000000000000000); // 6k Eth
+	const hardCap = new web3.BigNumber(53000000000000000000000); // 53k Eth
 	
-/*
+
     return deployer
         .then(() => {
-            //return deployer.deploy(EnvToken, "name", "sym", 18, {gas: 4000000});
-			return deployer.deploy(EnvToken, {gas: 4000000});
+            return deployer.deploy(OwnToken, hardCap, "name", 18, "sym");
         })
         .then(() => {
             return deployer.deploy(
-                EnvTokenCrowdsale,
+                OwnTokenCrowdsale,
                 openingTime,
                 closingTime,
+				softGap,
                 rate,
                 wallet,
-                EnvToken.address,
-				{gas: 4700000}
+				hardCap,
+                OwnToken.address
             );
         });
-		*/
+;
+		
 };
