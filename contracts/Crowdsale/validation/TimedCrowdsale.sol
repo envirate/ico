@@ -20,7 +20,7 @@ contract TimedCrowdsale is WhitelistedCrowdsale
    */
   modifier onlyWhileOpen {
     // solium-disable-next-line security/no-block-members
-    require(block.timestamp >= openingTime && block.timestamp <= closingTime);
+    require(block.timestamp >= openingTime && block.timestamp <= closingTime, "Sorry, the crowdsale is not open");
     _;
   }
 
@@ -31,7 +31,7 @@ contract TimedCrowdsale is WhitelistedCrowdsale
    */
   constructor(uint256 _openingTime, uint256 _closingTime) public {
     // solium-disable-next-line security/no-block-members
-    //require(_openingTime >= block.timestamp, "Invalid opening time");
+    require(_openingTime >= block.timestamp, "Invalid opening time");
     require(_closingTime >= _openingTime, "Invalid closing time");
 
     openingTime = _openingTime;

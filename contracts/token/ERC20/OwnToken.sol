@@ -3,7 +3,7 @@ pragma solidity 0.4.23;
 import './BurnableToken.sol';
 
 
-// maybe: CanReclaimToken, burnable
+// maybe: CanReclaimToken, ownable (transerownership)
 
 contract OwnToken is BurnableToken
 {
