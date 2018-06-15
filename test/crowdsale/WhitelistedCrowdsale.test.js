@@ -1,26 +1,49 @@
 import ether from '../helpers/ether';
+import { advanceBlock } from '../helpers/advanceToBlock';
+import { increaseTimeTo, duration } from '../helpers/increaseTime';
+import latestTime from '../helpers/latestTime';
+import EVMRevert from '../helpers/EVMRevert';
 
 const BigNumber = web3.BigNumber;
 
 require('chai')
   .use(require('chai-as-promised'))
+  .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const WhitelistedCrowdsale = artifacts.require('WhitelistedCrowdsaleImpl');
+const OwnTokenCrowdsale = artifacts.require('OwnTokenCrowdsale');
 const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('WhitelistedCrowdsale', function ([_, wallet, authorized, unauthorized, anotherAuthorized]) {
-  const rate = 1;
-  const value = ether(2);
-  const tokenSupply = new BigNumber('1e22');
+  const rate = new BigNumber(2);
+  const value = ether(3);
+  const expectedTokenAmount = rate.mul(value);
+  const hardcap = new BigNumber(ether(100));
+  const softcap = new BigNumber(ether(10));
+  
+  before(async function () {
+    // Advance to the next block to correctly read time in the solidity "now" function interpreted by ganache
+    await advanceBlock();
+  });
+  
+  beforeEach(async function () {
+    this.token = await OwnToken.new();
+	const supply = await this.token.INITIAL_SUPPLY();
+	this.openingTime = latestTime() + duration.weeks(1);
+    this.closingTime = this.openingTime + duration.weeks(1);
+    this.afterClosingTime = this.closingTime + duration.seconds(1);
+    this.crowdsale = await OwnTokenCrowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
+	//await this.crowdsale.transferOwnership(investor);
+    await this.token.transfer(this.crowdsale.address, supply);
+	await increaseTimeTo(this.openingTime);
+  });
 
   describe('single user whitelisting', function () {
-    beforeEach(async function () {
-      this.token = await OwnToken.new();
-      this.crowdsale = await WhitelistedCrowdsale.new(rate, wallet, this.token.address);
-      await this.token.transfer(this.crowdsale.address, tokenSupply);
+    
+	beforeEach(async function () {
       await this.crowdsale.addToWhitelist(authorized);
     });
+	
 
     describe('accepting payments', function () {
       it('should accept payments to whitelisted (from whichever buyers)', async function () {
@@ -51,13 +74,9 @@ contract('WhitelistedCrowdsale', function ([_, wallet, authorized, unauthorized,
   });
 
   describe('many user whitelisting', function () {
-    beforeEach(async function () {
-      this.token = await OwnToken.new();
-      this.crowdsale = await WhitelistedCrowdsale.new(rate, wallet, this.token.address);
-      await this.token.transfer(this.crowdsale.address, tokenSupply);
+	beforeEach(async function () {
       await this.crowdsale.addManyToWhitelist([authorized, anotherAuthorized]);
     });
-
     describe('accepting payments', function () {
       it('should accept payments to whitelisted (from whichever buyers)', async function () {
         await this.crowdsale.buyTokens(authorized, { value: value, from: authorized }).should.be.fulfilled;

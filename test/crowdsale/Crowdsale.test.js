@@ -1,4 +1,8 @@
 import ether from '../helpers/ether';
+import { advanceBlock } from '../helpers/advanceToBlock';
+import { increaseTimeTo, duration } from '../helpers/increaseTime';
+import latestTime from '../helpers/latestTime';
+import EVMRevert from '../helpers/EVMRevert';
 
 const BigNumber = web3.BigNumber;
 
@@ -7,19 +11,32 @@ const should = require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const Crowdsale = artifacts.require('Crowdsale');
+const Crowdsale = artifacts.require('OwnTokenCrowdsale');
 const OwnToken = artifacts.require('OwnTokenMock');
 
-contract('Crowdsale', function ([_, investor, wallet, purchaser]) {
+contract('Crowdsale', function ([origWallet, investor, wallet, purchaser]) {
   const rate = new BigNumber(2);
-  const value = ether(4);
+  const value = ether(3);
   const expectedTokenAmount = rate.mul(value);
+  const hardcap = new BigNumber(ether(100));
+  const softcap = new BigNumber(ether(10));
+  
+  before(async function () {
+    // Advance to the next block to correctly read time in the solidity "now" function interpreted by ganache
+    await advanceBlock();
+  });
 
   beforeEach(async function () {
     this.token = await OwnToken.new();
 	const supply = await this.token.INITIAL_SUPPLY();
-    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address);
+	this.openingTime = latestTime() + duration.weeks(1);
+    this.closingTime = this.openingTime + duration.weeks(1);
+    this.afterClosingTime = this.closingTime + duration.seconds(1);
+    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
+	await this.crowdsale.addManyToWhitelist([ origWallet, investor, wallet, purchaser ]);
+	await this.crowdsale.transferOwnership(investor);
     await this.token.transfer(this.crowdsale.address, supply);
+	await increaseTimeTo(this.openingTime);
   });
 
   describe('accepting payments', function () {
@@ -40,17 +57,18 @@ contract('Crowdsale', function ([_, investor, wallet, purchaser]) {
       event.args.amount.should.be.bignumber.equal(expectedTokenAmount);
     });
 
-    it('should assign tokens to sender', async function () {
+    it('should not assign tokens to sender', async function () {
+		let balancePre = await this.token.balanceOf(investor);
       await this.crowdsale.sendTransaction({ value: value, from: investor });
       let balance = await this.token.balanceOf(investor);
-      balance.should.be.bignumber.equal(expectedTokenAmount);
+      balance.should.be.bignumber.equal(balancePre);
     });
 
-    it('should forward funds to wallet', async function () {
+    it('should not forward funds to wallet', async function () {
       const pre = web3.eth.getBalance(wallet);
       await this.crowdsale.sendTransaction({ value, from: investor });
       const post = web3.eth.getBalance(wallet);
-      post.minus(pre).should.be.bignumber.equal(value);
+      post.should.be.bignumber.equal(pre);
     });
   });
 
@@ -65,17 +83,18 @@ contract('Crowdsale', function ([_, investor, wallet, purchaser]) {
       event.args.amount.should.be.bignumber.equal(expectedTokenAmount);
     });
 
-    it('should assign tokens to beneficiary', async function () {
+    it('should not assign tokens to beneficiary', async function () {
+		const balancePre = await this.token.balanceOf(investor);
       await this.crowdsale.buyTokens(investor, { value, from: purchaser });
       const balance = await this.token.balanceOf(investor);
-      balance.should.be.bignumber.equal(expectedTokenAmount);
+      balance.should.be.bignumber.equal(balancePre);
     });
 
-    it('should forward funds to wallet', async function () {
+    it('should not forward funds to wallet', async function () {
       const pre = web3.eth.getBalance(wallet);
       await this.crowdsale.buyTokens(investor, { value, from: purchaser });
       const post = web3.eth.getBalance(wallet);
-      post.minus(pre).should.be.bignumber.equal(value);
+     pre.should.be.bignumber.equal(post);
     });
   });
 });
