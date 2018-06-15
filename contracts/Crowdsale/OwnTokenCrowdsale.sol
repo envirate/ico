@@ -14,16 +14,16 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 	
     constructor
         (
-            uint256 _openingTime,
-            uint256 _closingTime,
-			uint256 _softCap,
 			uint256 _rate,
             address _wallet,
+			OwnToken _token,
 			uint256 _hardCap,
-            OwnToken _token
+			uint256 _softCap,
+            uint256 _openingTime,
+            uint256 _closingTime  
         )
 		public
-		Crowdsale(_rate, 0x01, _token)		
+		Crowdsale(_rate, _wallet, _token)		
 		TimedCrowdsale(_openingTime, _closingTime)
 		RefundableCrowdsale(_softCap)
 		CappedCrowdsale(_hardCap)
@@ -46,9 +46,11 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 	   * @param _beneficiary Address performing the token purchase
 	   * @param _weiAmount Value in wei involved in the purchase
 	   */
+	   
 	  function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) whenNotPaused internal {
 		super._preValidatePurchase(_beneficiary, _weiAmount);
 	  }
+	  
 		
 	
 }

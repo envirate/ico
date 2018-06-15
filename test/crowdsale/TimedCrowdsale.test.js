@@ -11,28 +11,30 @@ require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const TimedCrowdsale = artifacts.require('TimedCrowdsaleImpl');
+const Crowdsale = artifacts.require('OwnTokenCrowdsale');
 const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('TimedCrowdsale', function ([origWallet, investor, wallet, purchaser]) {
-  const rate = new BigNumber(1);
-  const value = ether(2);
-  const tokenSupply = new BigNumber('1e22');
+  const rate = new BigNumber(2);
+  const value = ether(3);
+  const expectedTokenAmount = rate.mul(value);
+  const hardcap = new BigNumber(ether(100));
+  const softcap = new BigNumber(ether(10));
 
   before(async function () {
     // Advance to the next block to correctly read time in the solidity "now" function interpreted by ganache
     await advanceBlock();
   });
-
+  
   beforeEach(async function () {
-    this.openingTime = latestTime() + duration.weeks(1);
+    this.token = await OwnToken.new();
+	const supply = await this.token.INITIAL_SUPPLY();
+	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(1);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
-    this.token = await OwnToken.new();
-    this.crowdsale = await TimedCrowdsale.new(this.openingTime, this.closingTime, rate, wallet, this.token.address);
+    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
 	await this.crowdsale.addManyToWhitelist([ origWallet, investor, purchaser ]);
-    await this.token.transfer(this.crowdsale.address, tokenSupply);
-	
+    await this.token.transfer(this.crowdsale.address, supply);
   });
 
   it('should be ended only after end', async function () {
