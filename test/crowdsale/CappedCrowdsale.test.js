@@ -40,20 +40,6 @@ contract('CappedCrowdsale', function ([origWallet, wallet]) {
     await this.token.transfer(this.crowdsale.address, supply);
 	await increaseTimeTo(this.openingTime);
   });
-  
-  /*
-  beforeEach(async function () {
-    this.token = await OwnTokenMock.new();
-	const supply = await this.token.INITIAL_SUPPLY();
-	this.openingTime = latestTime() + duration.weeks(1);
-    this.closingTime = this.openingTime + duration.weeks(1);
-
-    this.crowdsale = await Crowdsale.new(rate, owner, this.token.address, cap, this.openingTime, this.closingTime, goal);
-	await this.crowdsale.addManyToWhitelist([ origWallet, owner ]);
-	await this.crowdsale.transferOwnership(owner);
-    await this.token.transfer(this.crowdsale.address, supply);
-  });
-  */
 
   describe('creating a valid crowdsale', function () {
     it('should fail with zero hardcap', async function () {
