@@ -42,7 +42,7 @@ contract Crowdsale is Ownable {
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
 
   /**
-   * @param _rate Number of token units a buyer gets per wei
+   * @param _rate Number of token units a buyer gets per wei. Parameter irrelevant in our case (Envirate) as the value is set in low-level crowdsale contract.
    * @param _wallet Address where collected funds will be forwarded to
    * @param _token Address of the token being sold
    */
