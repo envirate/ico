@@ -47,11 +47,11 @@ contract Crowdsale is Ownable {
    * @param _token Address of the token being sold
    */
   constructor(uint256 _rate, address _wallet, OwnToken _token) public {
-    require(_rate > 0, "Invalid rate");
+    //require(_rate > 0, "Invalid rate");
     require(_wallet != address(0), "Invalid wallet address");
     require(_token != address(0), "Invalid token address");
 
-    rate = _rate;
+    //rate = _rate;
     wallet = _wallet;
     token = _token;
   }

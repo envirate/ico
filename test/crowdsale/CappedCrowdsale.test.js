@@ -11,11 +11,11 @@ require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const Crowdsale = artifacts.require('OwnTokenCrowdsale');
+const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
 const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('CappedCrowdsale', function ([origWallet, wallet]) {
-  const rate = new BigNumber(2);
+  const rate = new BigNumber(1);
   const value = ether(3);
   const expectedTokenAmount = rate.mul(value);
   const hardcap = new BigNumber(ether(5));
@@ -34,7 +34,7 @@ contract('CappedCrowdsale', function ([origWallet, wallet]) {
 	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(1);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
-    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
+    this.crowdsale = await Crowdsale.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
 	await this.crowdsale.addManyToWhitelist([ origWallet, wallet ]);
 	await this.crowdsale.transferOwnership(wallet);
     await this.token.transfer(this.crowdsale.address, supply);
@@ -43,7 +43,7 @@ contract('CappedCrowdsale', function ([origWallet, wallet]) {
 
   describe('creating a valid crowdsale', function () {
     it('should fail with zero hardcap', async function () {
-      await Crowdsale.new(rate, wallet, this.token.address, 0, softcap, this.openingTime, this.closingTime).should.be.rejectedWith(EVMRevert);
+      await Crowdsale.new(wallet, this.token.address, 0, softcap, this.openingTime, this.closingTime).should.be.rejectedWith(EVMRevert);
     });
   });
 

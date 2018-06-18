@@ -11,25 +11,35 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 	using SafeMath for uint256;
 	
 	mapping(address => uint256) public toBeReceivedTokenAmounts;
+	uint256 public minInvestment;
 	
     constructor
         (
-			uint256 _rate,
             address _wallet,
 			OwnToken _token,
 			uint256 _hardCap,
 			uint256 _softCap,
             uint256 _openingTime,
-            uint256 _closingTime
+            uint256 _closingTime,
+			uint256 p1End, uint256 p1Rate,
+		    uint256 p2End, uint256 p2Rate,
+		    uint256 p3Rate
         )
 		public
-		Crowdsale(_rate, _wallet, _token)		
+		Crowdsale(1, _wallet, _token)		
 		TimedCrowdsale(_openingTime, _closingTime)
 		RefundableCrowdsale(_softCap)
 		CappedCrowdsale(_hardCap)
  
          {
-
+			phase1End = p1End;
+			phase1Rate = p1Rate;
+			phase2End = p2End;
+			phase2Rate = p2Rate;
+			phase3End = _closingTime;
+			phase3Rate = p3Rate;
+			
+			minInvestment = (1 ether) / 10;
         }
 		
 		/**
@@ -49,69 +59,39 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 	   
 	  function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) whenNotPaused internal {
 		super._preValidatePurchase(_beneficiary, _weiAmount);
+		require(weiRaised.add(_weiAmount) <= cap, "Sorry, the crowdsale has reached its hard cap");
+		require(msg.value >= minInvestment, "Sorry, you have to meet the minimum amount");
 		
-		//uint256 usedRate = 1;
-		if (now < period1End) {
-			rate = period1Rate;
+		
+		_setRate();
+		
+		
+	  }
+	  
+	  function _setRate() private {
+	    if (now < phase1End) {
+			rate = phase1Rate;
 		}
-		else if (now < period2End) {
-			rate = period2Rate;
+		else if (now < phase2End) {
+			rate = phase2Rate;
 		}
-		else if (now < period3End) {
-			rate = period3Rate;
-		}
-		else if (now < period4End) {
-			rate = period4Rate;
-		}
-		else if (now < period5End) {
-			rate = period5Rate;
+		else if (now < phase3End) {
+			rate = phase3Rate;
 		}
 		else {
-			rate = 1;
+			rate = 100;
 		}
 	  }
 	  
 	  
 	  
 	  
-	  bool public ratesSet = false;
-	  
-	  uint256 public period1End;
-	  uint256 public period1Rate;
-	  uint256 public period2End;
-	  uint256 public period2Rate;
-	  uint256 public period3End;
-	  uint256 public period3Rate;
-	  uint256 public period4End;
-	  uint256 public period4Rate;
-	  uint256 public period5End;
-	  uint256 public period5Rate;
-	  
-	  /**
-	   * @dev Set used rates for different sale periods. Multiply by 100, so 25% bonus is given here as 125.
-	   */
-	  function setRates(
-		  uint256 p1End, uint256 p1Rate,
-		  uint256 p2End, uint256 p2Rate,
-		  uint256 p3End, uint256 p3Rate,
-		  uint256 p4End, uint256 p4Rate,
-		  uint256 p5End, uint256 p5Rate
-	  ) public {
-		require(!ratesSet, "The rates have already been set");
-		
-		period1End = p1End;
-		period1Rate = p1Rate;
-		period2End = p2End;
-		period2Rate = p2Rate;
-		period3End = p3End;
-		period3Rate = p3Rate;
-		period4End = p4End;
-		period4Rate = p4Rate;
-		period5End = p5End;
-		period5Rate = p5Rate;
-		
-		ratesSet = true;
-	  }
+	  uint256 public phase1End;
+	  uint256 public phase1Rate;	  
+	  uint256 public phase2End;
+	  uint256 public phase2Rate;
+	  uint256 public phase3End;
+	  uint256 public phase3Rate;
 	  
 	  /**
 	   * @dev Override to extend the way in which ether is converted to tokens.
@@ -122,6 +102,11 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 		//return _weiAmount.mul(rate);
 		
 		return _weiAmount.mul(rate).div(100);
+	  }
+	  
+	  function setMinInvestment(uint256 minInv) onlyOwner public {
+		require(minInv > 0, "Incorrect minimum investment");
+		minInvestment = minInv;
 	  }
 	
 }

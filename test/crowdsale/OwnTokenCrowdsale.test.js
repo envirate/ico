@@ -11,28 +11,25 @@ const should = require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const Crowdsale = artifacts.require('OwnTokenCrowdsale');
+const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
+const CrowdsaleReal = artifacts.require('OwnTokenCrowdsale');
 const OwnToken = artifacts.require('OwnTokenMock');
+const RefundVault = artifacts.require('RefundVault');
 
 contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser]) {
   const rate = new BigNumber(2);
-  const value = ether(3);
+  const value = new BigNumber(ether(3));
   const expectedTokenAmount = rate.mul(value);
   const hardcap = new BigNumber(ether(15));
-  const softcap = new BigNumber(ether(3));
+  const softcap = new BigNumber(ether(9));
   
   const interval = new BigNumber(2);
 
-  const period1Length = duration.weeks(interval * 1);
-  const period1Rate = new BigNumber(130);
-  const period2Length = duration.weeks(interval * 2);
-  const period2Rate = new BigNumber(125);
-  const period3Length = duration.weeks(interval * 3);
-  const period3Rate = new BigNumber(120);
-  const period4Length = duration.weeks(interval * 4);
-  const period4Rate = new BigNumber(115);
-  const period5Length = duration.weeks(interval * 5);
-  const period5Rate = new BigNumber(110);
+  const phase1Length = duration.weeks(interval * 1);
+  const phase1Rate = new BigNumber(130);
+  const phase2Length = duration.weeks(interval * 2);
+  const phase2Rate = new BigNumber(125);
+  const phase3Rate = new BigNumber(120);
   
   function getTokenAmount(perRate, origTokens) {
 	  return (origTokens * perRate) / 100;
@@ -49,27 +46,21 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(20);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
-    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
-	
-	await this.crowdsale.setRates(	    
-		this.openingTime + period1Length, period1Rate,
-		this.openingTime + period2Length, period2Rate,
-		this.openingTime + period3Length, period3Rate,
-		this.openingTime + period4Length, period4Rate,
-		this.openingTime + period5Length, period5Rate
-		);
+    this.crowdsale = await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime,
+		this.openingTime + phase1Length, phase1Rate,
+		this.openingTime + phase2Length, phase2Rate,
+		phase3Rate);
+
 	
 	
 	await this.crowdsale.addManyToWhitelist([ origWallet, investor, wallet, purchaser ]);
-	//await this.crowdsale.transferOwnership(investor);
     await this.token.transfer(this.crowdsale.address, supply);
 	
-	// start from the beginning of sales periods
+	// start from the beginning of sales phases
 	await increaseTimeTo(this.openingTime);
   });
   
   describe('buing tokens', function () {
-	  
 	it('should start from zero', async function () {
       let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
       balance.should.be.bignumber.equal(0);
@@ -79,7 +70,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
       await this.crowdsale.sendTransaction({ value: value, from: investor });
       let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
 	  
-      balance.should.be.bignumber.equal(getTokenAmount(period1Rate, value));
+      balance.should.be.bignumber.equal(getTokenAmount(phase1Rate, value));
     });
 	
 	it('should assign tokens to sender internally correctly for multiple purchases', async function () {
@@ -87,26 +78,56 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
       await this.crowdsale.sendTransaction({ value: value, from: investor });
       await this.crowdsale.sendTransaction({ value: newBuy, from: investor });
 
-	  let firstBal = getTokenAmount(period1Rate, value);
-	  let secondBal = getTokenAmount(period1Rate, newBuy);
+	  let firstBal = getTokenAmount(phase1Rate, value);
+	  let secondBal = getTokenAmount(phase1Rate, newBuy);
 
 	  let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
       balance.should.be.bignumber.equal(firstBal + secondBal);
     });
 	
-	it('should assign tokens to sender internally correctly for multiple purchases for multiple periods', async function () {
+	it('should assign tokens to sender internally correctly for multiple purchases for multiple phases', async function () {
 	  let newBuy = value.sub(ether(1));
       await this.crowdsale.sendTransaction({ value: value, from: investor });
-	  await increaseTimeTo(this.openingTime + period1Length);
+	  await increaseTimeTo(this.openingTime + phase1Length);
 	  await this.crowdsale.sendTransaction({ value: newBuy, from: investor });
 
-	  let firstBal = getTokenAmount(period1Rate, value);
-	  let secondBal = getTokenAmount(period2Rate, newBuy);
+	  let firstBal = getTokenAmount(phase1Rate, value);
+	  let secondBal = getTokenAmount(phase2Rate, newBuy);
 
 	  let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
       balance.should.be.bignumber.equal(firstBal + secondBal);
     });
+	
+	it('should allow refund if soft cap not met', async function () {
+	  
+	  const vault = await this.crowdsale.vault();
+	  
+	  const prePurcBal1 = web3.eth.getBalance(investor);
+	  const prePurcBal2 = web3.eth.getBalance(purchaser);
+	  
+	  let newBuy = value.sub(ether(1));
+      await this.crowdsale.sendTransaction({ value: value, from: investor, gasPrice: 0 });
+	  await this.crowdsale.sendTransaction({ value: newBuy, from: purchaser, gasPrice: 0 });
+	  
+	  await increaseTimeTo(this.closingTime + duration.seconds(1));
 
+	  await this.crowdsale.finalize();
+	  
+	  const preBal1 = web3.eth.getBalance(investor);
+	  const preBal2 = web3.eth.getBalance(purchaser);
+
+	  await this.crowdsale.claimRefund({ from: investor, gasPrice: 0 }).should.be.fulfilled;    
+	  await this.crowdsale.claimRefund({ from: purchaser, gasPrice: 0 }).should.be.fulfilled;
+	  
+	  const postBal1 = web3.eth.getBalance(investor);
+	  const postBal2 = web3.eth.getBalance(purchaser);
+
+      postBal1.minus(preBal1).should.be.bignumber.equal(value);
+	  postBal2.minus(preBal2).should.be.bignumber.equal(newBuy);
+	  
+	  prePurcBal1.should.be.bignumber.equal(postBal1);
+	  prePurcBal2.should.be.bignumber.equal(postBal2);
+    });
   });
   
   describe('when paused', function () {
@@ -115,31 +136,42 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
       await this.crowdsale.sendTransaction({ value: value }).should.be.rejectedWith(EVMRevert);
     });
   });
+
+  
+  describe('with minimum investment', function () {
+    it('should require minimum purchase amount', async function () {
+	  const minInv = await this.crowdsale.minInvestment();
+	  const lessThanMin = minInv.minus(1);
+      await this.crowdsale.sendTransaction({ value: lessThanMin, from: investor }).should.be.rejectedWith(EVMRevert);
+    });
+	
+	it('should allow with minimum purchase amount', async function () {
+	  const minInv = await this.crowdsale.minInvestment();
+      await this.crowdsale.sendTransaction({ value: minInv, from: investor }).should.be.fulfilled;
+    });
+	
+	it('should allow with minimum purchase amount', async function () {
+	  const oldMinInv = await this.crowdsale.minInvestment();
+	  const moreThanMin = oldMinInv.add(5);
+	  await this.crowdsale.setMinInvestment(moreThanMin);
+      await this.crowdsale.sendTransaction({ value: oldMinInv, from: investor }).should.be.rejectedWith(EVMRevert);
+	  await this.crowdsale.sendTransaction({ value: moreThanMin, from: investor }).should.be.fulfilled;
+	  
+	  const newMinInv = await this.crowdsale.minInvestment();
+	  newMinInv.should.be.bignumber.equal(moreThanMin);
+    });
+  });
   
   
   describe('setting rates', function () {
-    it('twice should revert', async function () {
-      await this.crowdsale.setRates(
-		1, 2,
-		3, 4,
-		5, 6,
-		7, 8,
-		9, 10
-		).should.be.rejectedWith(EVMRevert);
-    });
 	
 	it('correctly', async function () {
-      (await this.crowdsale.period1End()).should.be.bignumber.equal(this.openingTime + period1Length);
-	  (await this.crowdsale.period2End()).should.be.bignumber.equal(this.openingTime + period2Length);
-	  (await this.crowdsale.period3End()).should.be.bignumber.equal(this.openingTime + period3Length);
-	  (await this.crowdsale.period4End()).should.be.bignumber.equal(this.openingTime + period4Length);
-	  (await this.crowdsale.period5End()).should.be.bignumber.equal(this.openingTime + period5Length);
+      (await this.crowdsale.phase1End()).should.be.bignumber.equal(this.openingTime + phase1Length);
+	  (await this.crowdsale.phase2End()).should.be.bignumber.equal(this.openingTime + phase2Length);
 	  
-	  (await this.crowdsale.period1Rate()).should.be.bignumber.equal(period1Rate);
-	  (await this.crowdsale.period2Rate()).should.be.bignumber.equal(period2Rate);
-	  (await this.crowdsale.period3Rate()).should.be.bignumber.equal(period3Rate);
-	  (await this.crowdsale.period4Rate()).should.be.bignumber.equal(period4Rate);
-	  (await this.crowdsale.period5Rate()).should.be.bignumber.equal(period5Rate);
+	  (await this.crowdsale.phase1Rate()).should.be.bignumber.equal(phase1Rate);
+	  (await this.crowdsale.phase2Rate()).should.be.bignumber.equal(phase2Rate);
+	  (await this.crowdsale.phase3Rate()).should.be.bignumber.equal(phase3Rate);
     });
   });
   

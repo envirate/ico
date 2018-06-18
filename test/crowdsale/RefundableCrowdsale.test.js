@@ -11,13 +11,12 @@ require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const Crowdsale = artifacts.require('OwnTokenCrowdsale');
+const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
 const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('RefundableCrowdsale', function ([origWallet, owner, wallet, investor, purchaser]) {
-  const rate = new BigNumber(2);
+  const rate = new BigNumber(1);
   const value = ether(3);
-  const expectedTokenAmount = rate.mul(value);
   const hardcap = new BigNumber(ether(100));
   const softcap = new BigNumber(ether(10));
   const lessThanGoal = new BigNumber(ether(8));
@@ -33,30 +32,15 @@ contract('RefundableCrowdsale', function ([origWallet, owner, wallet, investor, 
 	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(1);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
-    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
+    this.crowdsale = await Crowdsale.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
 	await this.crowdsale.addManyToWhitelist([ origWallet, owner, investor, purchaser ]);
 	await this.crowdsale.transferOwnership(owner);
     await this.token.transfer(this.crowdsale.address, supply);
   });
-/*
-  beforeEach(async function () {
-    this.openingTime = latestTime() + duration.weeks(1);
-    this.closingTime = this.openingTime + duration.weeks(1);
-    this.afterClosingTime = this.closingTime + duration.seconds(1);
 
-    this.token = await OwnToken.new();
-	const supply = await this.token.INITIAL_SUPPLY();
-    this.crowdsale = await Crowdsale.new(
-      this.openingTime, this.closingTime, rate, wallet, this.token.address, goal
-    );
-	await this.crowdsale.addManyToWhitelist([ origWallet, owner, investor, purchaser ]);
-	await this.crowdsale.transferOwnership(owner);
-    await this.token.transfer(this.crowdsale.address, supply);
-  });
-*/
   describe('creating a valid crowdsale', function () {
     it('should fail with zero softcap', async function () {
-      await Crowdsale.new(rate, wallet, this.token.address, hardcap, 0, this.openingTime, this.closingTime).should.be.rejectedWith(EVMRevert);
+      await Crowdsale.new(wallet, this.token.address, hardcap, 0, this.openingTime, this.closingTime).should.be.rejectedWith(EVMRevert);
     });
   });
 
