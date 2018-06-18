@@ -11,13 +11,12 @@ const should = require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const Crowdsale = artifacts.require('OwnTokenCrowdsale');
+const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
 const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('FinalizableCrowdsale', function ([origWallet, owner, wallet, thirdparty]) {
-  const rate = new BigNumber(2);
+  //const rate = new BigNumber(1);
   const value = ether(3);
-  const expectedTokenAmount = rate.mul(value);
   const hardcap = new BigNumber(ether(100));
   const softcap = new BigNumber(ether(10));
 
@@ -32,27 +31,11 @@ contract('FinalizableCrowdsale', function ([origWallet, owner, wallet, thirdpart
 	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(1);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
-    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
+    this.crowdsale = await Crowdsale.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
 	await this.crowdsale.addManyToWhitelist([ origWallet, owner, thirdparty ]);
 	await this.crowdsale.transferOwnership(owner);
 	await increaseTimeTo(this.openingTime);
   });
-/*
-  beforeEach(async function () {
-    this.openingTime = latestTime() + duration.weeks(1);
-    this.closingTime = this.openingTime + duration.weeks(1);
-    this.afterClosingTime = this.closingTime + duration.seconds(1);
-	
-    this.token = await OwnToken.new();
-    this.crowdsale = await Crowdsale.new(
-      this.openingTime, this.closingTime, rate, wallet, this.token.address
-    );
-	await this.crowdsale.addManyToWhitelist([ origWallet, owner, thirdparty ]);
-	await this.crowdsale.transferOwnership(owner);
-	//await this.token.transferOwnership(this.crowdsale.address);
-	//await this.token.transfer(this.crowdsale.address, tokenSupply);
-  });
-  */
 
   it('cannot be finalized before ending', async function () {
     await this.crowdsale.finalize({ from: owner }).should.be.rejectedWith(EVMRevert);

@@ -11,11 +11,11 @@ require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const Crowdsale = artifacts.require('OwnTokenCrowdsale');
+const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
 const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('TimedCrowdsale', function ([origWallet, investor, wallet, purchaser]) {
-  const rate = new BigNumber(2);
+  const rate = new BigNumber(1);
   const value = ether(3);
   const expectedTokenAmount = rate.mul(value);
   const hardcap = new BigNumber(ether(100));
@@ -32,7 +32,7 @@ contract('TimedCrowdsale', function ([origWallet, investor, wallet, purchaser]) 
 	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(1);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
-    this.crowdsale = await Crowdsale.new(rate, wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
+    this.crowdsale = await Crowdsale.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
 	await this.crowdsale.addManyToWhitelist([ origWallet, investor, purchaser ]);
     await this.token.transfer(this.crowdsale.address, supply);
   });

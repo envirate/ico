@@ -4,7 +4,7 @@ const OwnToken = artifacts.require('./OwnToken.sol');
 module.exports = function(deployer, network, accounts) {
     const openingTime = web3.eth.getBlock('latest').timestamp + 20; // two secs in the future
     const closingTime = openingTime + 86400 * 20; // 20 days
-    const rate = new web3.BigNumber(10000000000000 * 1.3);
+    //const rate = new web3.BigNumber(10000000000000 * 1.3);
     const wallet = accounts[1];
 	// 1000000000000000000 = 1 Eth
 	// 10000000000000 = 1 Eth / 100 000
@@ -19,13 +19,14 @@ module.exports = function(deployer, network, accounts) {
         .then(() => {
             return deployer.deploy(
                 OwnTokenCrowdsale,
-                rate,
+                //rate,
 				wallet,
 				OwnToken.address,
 				hardCap,
 				softGap,
 				openingTime,
                 closingTime,
+				0,0,0,0,0
             );
         });
 ;
