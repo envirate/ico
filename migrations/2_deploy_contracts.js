@@ -19,14 +19,14 @@ module.exports = function(deployer, network, accounts) {
         .then(() => {
             return deployer.deploy(
                 OwnTokenCrowdsale,
-                //rate,
 				wallet,
 				OwnToken.address,
 				hardCap,
 				softGap,
 				openingTime,
                 closingTime,
-				0,0,0,0,0
+				1,
+				0,0,0,0
             );
         });
 ;

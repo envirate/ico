@@ -13,6 +13,11 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 	mapping(address => uint256) public toBeReceivedTokenAmounts;
 	uint256 public minInvestment;
 	
+	uint256 public phase1End;
+	uint256 public phase1Rate;
+	uint256 public phase2End;
+	uint256 public phase2Rate;
+	
     constructor
         (
             address _wallet,
@@ -21,9 +26,9 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 			uint256 _softCap,
             uint256 _openingTime,
             uint256 _closingTime,
-			uint256 p1End, uint256 p1Rate,
-		    uint256 p2End, uint256 p2Rate,
-		    uint256 p3Rate
+			uint256 _minInvestment,
+			uint256 _p1End, uint256 _p1Rate,
+		    uint256 _p2End, uint256 _p2Rate
         )
 		public
 		Crowdsale(1, _wallet, _token)		
@@ -32,14 +37,12 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 		CappedCrowdsale(_hardCap)
  
          {
-			phase1End = p1End;
-			phase1Rate = p1Rate;
-			phase2End = p2End;
-			phase2Rate = p2Rate;
-			phase3End = _closingTime;
-			phase3Rate = p3Rate;
+			phase1End = _p1End;
+			phase1Rate = _p1Rate;
+			phase2End = _p2End;
+			phase2Rate = _p2Rate;
 			
-			minInvestment = (1 ether) / 10;
+			minInvestment = _minInvestment;
         }
 		
 		/**
@@ -75,23 +78,12 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 		else if (now < phase2End) {
 			rate = phase2Rate;
 		}
-		else if (now < phase3End) {
-			rate = phase3Rate;
-		}
 		else {
 			rate = 100;
 		}
 	  }
 	  
 	  
-	  
-	  
-	  uint256 public phase1End;
-	  uint256 public phase1Rate;	  
-	  uint256 public phase2End;
-	  uint256 public phase2Rate;
-	  uint256 public phase3End;
-	  uint256 public phase3Rate;
 	  
 	  /**
 	   * @dev Override to extend the way in which ether is converted to tokens.
@@ -102,11 +94,6 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 		//return _weiAmount.mul(rate);
 		
 		return _weiAmount.mul(rate).div(100);
-	  }
-	  
-	  function setMinInvestment(uint256 minInv) onlyOwner public {
-		require(minInv > 0, "Incorrect minimum investment");
-		minInvestment = minInv;
 	  }
 	
 }

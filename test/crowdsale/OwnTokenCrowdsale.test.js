@@ -24,12 +24,11 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
   const softcap = new BigNumber(ether(9));
   
   const interval = new BigNumber(2);
-
+  const minInvestment = ether(1) / 10;
   const phase1Length = duration.weeks(interval * 1);
   const phase1Rate = new BigNumber(130);
   const phase2Length = duration.weeks(interval * 2);
   const phase2Rate = new BigNumber(125);
-  const phase3Rate = new BigNumber(120);
   
   function getTokenAmount(perRate, origTokens) {
 	  return (origTokens * perRate) / 100;
@@ -46,10 +45,9 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(20);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
-    this.crowdsale = await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime,
+    this.crowdsale = await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
 		this.openingTime + phase1Length, phase1Rate,
-		this.openingTime + phase2Length, phase2Rate,
-		phase3Rate);
+		this.openingTime + phase2Length, phase2Rate);
 
 	
 	
@@ -59,7 +57,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	// start from the beginning of sales phases
 	await increaseTimeTo(this.openingTime);
   });
-  
+ 
   describe('buing tokens', function () {
 	it('should start from zero', async function () {
       let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
@@ -153,7 +151,23 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	it('should allow with minimum purchase amount', async function () {
 	  const oldMinInv = await this.crowdsale.minInvestment();
 	  const moreThanMin = oldMinInv.add(5);
-	  await this.crowdsale.setMinInvestment(moreThanMin);
+	  
+	  // recreate crowdsale to reset minimum investment
+	  this.token = await OwnToken.new();
+	  const supply = await this.token.INITIAL_SUPPLY();
+	  this.openingTime = latestTime() + duration.weeks(1);
+	  this.crowdsale = await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, moreThanMin,
+		this.openingTime + phase1Length, phase1Rate,
+		this.openingTime + phase2Length, phase2Rate);
+		
+	  await this.crowdsale.addManyToWhitelist([ origWallet, investor, wallet, purchaser ]);
+      await this.token.transfer(this.crowdsale.address, supply);
+	
+	  // start from the beginning of sales phases
+	  await increaseTimeTo(this.openingTime);
+	  
+	  // end of recreation
+	  
       await this.crowdsale.sendTransaction({ value: oldMinInv, from: investor }).should.be.rejectedWith(EVMRevert);
 	  await this.crowdsale.sendTransaction({ value: moreThanMin, from: investor }).should.be.fulfilled;
 	  
@@ -163,7 +177,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
   });
   
   
-  describe('setting rates', function () {
+  describe('handling rates', function () {
 	
 	it('correctly', async function () {
       (await this.crowdsale.phase1End()).should.be.bignumber.equal(this.openingTime + phase1Length);
@@ -171,7 +185,6 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	  
 	  (await this.crowdsale.phase1Rate()).should.be.bignumber.equal(phase1Rate);
 	  (await this.crowdsale.phase2Rate()).should.be.bignumber.equal(phase2Rate);
-	  (await this.crowdsale.phase3Rate()).should.be.bignumber.equal(phase3Rate);
     });
   });
   
