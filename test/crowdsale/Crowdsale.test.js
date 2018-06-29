@@ -15,15 +15,11 @@ const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
 const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('Crowdsale', function ([origWallet, investor, wallet, purchaser]) {
-<<<<<<< HEAD:test/crowdsale/Crowdsale.test.js
+
   const rate = new BigNumber(100);
   const value = ether(3);
   const expectedTokenAmount = value.mul(rate).div(100);
-=======
-  const rate = new BigNumber(1);
-  const value = ether(3);
-  const expectedTokenAmount = rate.mul(value).div(100);
->>>>>>> 45574d9f431df951e571a509178bf65e50150b67:test/crowdsale/Crowdsale.test.js
+
   const hardcap = new BigNumber(ether(100));
   const softcap = new BigNumber(ether(10));
   
