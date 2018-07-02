@@ -37,6 +37,16 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 		CappedCrowdsale(_hardCap)
  
          {
+			require(_p1End > _openingTime, "Phase 1 should be after opening time");
+			require(_p2End > _openingTime, "Phase 2 should be after opening time");
+			require(_p1End <= _closingTime, "Phase 1 should be before closing time");
+			require(_p2End <= _closingTime, "Phase 2 should be before closing time");
+			
+			require(_p1End < _p2End, "Phase 1 should be before phase 2");
+			
+			require(_p1Rate > 0, "Phase 1 rate should be positive");
+			require(_p2Rate > 0, "Phase 2 rate should be positive");
+			
 			phase1End = _p1End;
 			phase1Rate = _p1Rate;
 			phase2End = _p2End;

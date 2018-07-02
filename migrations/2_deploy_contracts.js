@@ -26,7 +26,7 @@ module.exports = function(deployer, network, accounts) {
 				openingTime,
                 closingTime,
 				1,
-				0,0,0,0
+				openingTime + 1,2, openingTime + 3,4
             );
         });
 ;

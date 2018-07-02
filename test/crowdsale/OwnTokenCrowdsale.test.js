@@ -57,7 +57,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	// start from the beginning of sales phases
 	await increaseTimeTo(this.openingTime);
   });
- 
+ /*
   describe('buing tokens', function () {
 	it('should start from zero', async function () {
       let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
@@ -175,7 +175,36 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	  newMinInv.should.be.bignumber.equal(moreThanMin);
     });
   });
+  */
   
+  describe('with irregular phase variables', function () {
+	it('should not work with phase 2 before phase 1', async function () {
+	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
+		this.openingTime + duration.weeks(interval * 2), phase1Rate,
+		this.openingTime + duration.weeks(interval * 1), phase2Rate).should.be.rejectedWith(EVMRevert);
+    });
+	it('should not work with phases before opening time', async function () {
+	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
+		this.openingTime - duration.weeks(interval * 1), phase1Rate,
+		this.openingTime + duration.weeks(interval * 2), phase2Rate).should.be.rejectedWith(EVMRevert);
+    });
+	it('should not work with phases after closing time', async function () {
+	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
+		this.openingTime + duration.weeks(interval * 1), phase1Rate,
+		this.closingTime + duration.weeks(interval * 2), phase2Rate).should.be.rejectedWith(EVMRevert);
+    });
+	
+	it('should not work with negative rates', async function () {
+	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
+		this.openingTime + duration.weeks(interval * 1), -1,
+		this.openingTime + duration.weeks(interval * 2), phase2Rate).should.be.rejectedWith(EVMRevert);
+	});	
+	it('should not work with negative rates 2', async function () {
+	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
+		this.openingTime + duration.weeks(interval * 1), phase1Rate,
+		this.openingTime + duration.weeks(interval * 2), -2).should.be.rejectedWith(EVMRevert);
+    });
+  });
   
   describe('handling rates', function () {
 	
