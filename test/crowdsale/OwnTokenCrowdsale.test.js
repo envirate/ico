@@ -57,7 +57,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	// start from the beginning of sales phases
 	await increaseTimeTo(this.openingTime);
   });
- /*
+ 
   describe('buing tokens', function () {
 	it('should start from zero', async function () {
       let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
@@ -175,7 +175,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	  newMinInv.should.be.bignumber.equal(moreThanMin);
     });
   });
-  */
+  
   
   describe('with irregular phase variables', function () {
 	it('should not work with phase 2 before phase 1', async function () {
