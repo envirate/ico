@@ -6,18 +6,45 @@ import './validation/TimedCrowdsale.sol';
 import './validation/CappedCrowdsale.sol';
 import '../lifecycle/Pausable.sol';
 
-contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale?
+/**
+ * @dev Crowdsale with custom overriding logic.
+ */
+contract OwnTokenCrowdsale is CappedCrowdsale, Pausable
 {
 	using SafeMath for uint256;
 	
+	// Information which address should receive how many tokens
 	mapping(address => uint256) public toBeReceivedTokenAmounts;
+	
+	// Minimum investment for this sale period, in weis
 	uint256 public minInvestment;
 	
+	// Timestamp when phase 1 ends
 	uint256 public phase1End;
+	// Rate for token purchases for phase 1
 	uint256 public phase1Rate;
+	// Timestamp when phase 2 ends
 	uint256 public phase2End;
+	// Rate for token purchases for phase 2
 	uint256 public phase2Rate;
 	
+	// Default rate for token purchases. Used if no other logic is in effect.
+	uint256 public defaultRate = 100;
+	
+	/**
+     * @dev Initializes the crowdsale contract
+     * @param _wallet Address for the wallet where the Ether is eventually sent
+     * @param _token The token to be used in the crowdsale
+	 * @param _hardCap Hard cap for the sale period. Period does not accept Ethers anymore if hard cap is reached.
+	 * @param _softCap Soft cap for the sale period. Period is successful iif soft cap is reached.
+	 * @param _openingTime When does the sale period start
+	 * @param _closingTime When does the sale period end
+	 * @param _minInvestment Minimum investment (in weis) for this period
+	 * @param _p1End End time for the first phase within the sale period
+	 * @param _p1Rate Rate for the first phase within the sale period
+	 * @param _p2End End time for the second phase within the sale period
+	 * @param _p2Rate Rate for the second phase within the sale period
+     */
     constructor
         (
             address _wallet,
@@ -42,7 +69,7 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 			require(_p1End <= _closingTime, "Phase 1 should be before closing time");
 			require(_p2End <= _closingTime, "Phase 2 should be before closing time");
 			
-			require(_p1End < _p2End, "Phase 1 should be before phase 2");
+			require(_p1End <= _p2End, "Phase 1 should be before phase 2");
 			
 			require(_p1Rate > 0, "Phase 1 rate should be positive");
 			require(_p2Rate > 0, "Phase 2 rate should be positive");
@@ -69,19 +96,18 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 	   * @param _beneficiary Address performing the token purchase
 	   * @param _weiAmount Value in wei involved in the purchase
 	   */
-	   
 	  function _preValidatePurchase(address _beneficiary, uint256 _weiAmount) whenNotPaused internal {
 		super._preValidatePurchase(_beneficiary, _weiAmount);
 		require(weiRaised.add(_weiAmount) <= cap, "Sorry, the crowdsale has reached its hard cap");
 		require(msg.value >= minInvestment, "Sorry, you have to meet the minimum amount");
-		
-		
+			
 		_setRate();
-		
-		
 	  }
 	  
-	  function _setRate() private {
+	  /**
+	   * @dev Sets the current rate (bonus) with which to calculate the amount of received tokens. Default is defaultRate.
+	   */
+	  function _setRate() internal {
 	    if (now < phase1End) {
 			rate = phase1Rate;
 		}
@@ -89,7 +115,7 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 			rate = phase2Rate;
 		}
 		else {
-			rate = 100;
+			rate = defaultRate;
 		}
 	  }
 	  
@@ -103,7 +129,7 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable // PostDeliveryCrowdsale
 	  function _getTokenAmount(uint256 _weiAmount) internal view returns (uint256) {
 		//return _weiAmount.mul(rate);
 		
-		return _weiAmount.mul(rate).div(100);
+		return _weiAmount.mul(rate).div(defaultRate);
 	  }
 	
 }
