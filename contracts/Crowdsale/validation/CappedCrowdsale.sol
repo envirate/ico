@@ -19,7 +19,7 @@ contract CappedCrowdsale is RefundableCrowdsale
    * @param _cap Max amount of wei to be contributed
    */
   constructor(uint256 _cap) public {
-    require(_cap > 0);
+    require(_cap > 0, "should use positive hard cap");
     cap = _cap;
   }
 

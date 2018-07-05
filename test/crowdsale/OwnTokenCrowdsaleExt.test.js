@@ -23,7 +23,7 @@ contract('OwnTokenCrowdsaleExtension', function ([origWallet, investor, wallet, 
   
   const interval = new BigNumber(2);
   const minInvestment = ether(1) / 10;
-  const softCapRate = new BigNumber(200);
+  const softCapRate = new BigNumber(100);
   
   function getTokenAmount(perRate, origTokens) {
 	  return (origTokens * perRate) / 100;

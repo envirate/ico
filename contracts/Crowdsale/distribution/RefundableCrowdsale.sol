@@ -26,7 +26,7 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
    * @param _goal Funding goal
    */
   constructor(uint256 _goal) public {
-    require(_goal > 0, "goal has to be positive");
+  require(_goal > 0, "should use positive soft cap");
     vault = new RefundVault(wallet);
     goal = _goal;
   }

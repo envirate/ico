@@ -16,7 +16,7 @@ const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('Crowdsale', function ([origWallet, investor, wallet, purchaser]) {
 
-  const rate = new BigNumber(100);
+  const rate = new BigNumber(100000);
   const value = ether(3);
   const expectedTokenAmount = value.mul(rate).div(100);
 

@@ -30,6 +30,29 @@ To run tests:
 1. Run in a separate cmd window: ganache-cli
 1. Run in the 'ico' folder: truffle.cmd test
 
+## Terminology
+* ICO = Initial Coin Offering
+* Bonus / rate = Depending on when you participate in the crowdsale, you may be entitled to certain bonuses. Typically such bonus is certain percentage more tokens for your purchase.
+* Sale period = A period of time in the crowdsale. Different sale period have typically different bonuses and different participation rules
+* Sale phase = A period of time within a sale period. A sale period may contain multiple sale phases which have different bonuses
+
+## Implemented functionality
+The following functionality is implemented with these contracts (also noted with which contract this is implemented):
+
+### Functionality for tokens:
+* Token is ERC20 compatible (contract EIP20Interface which is implemented in contract EIP20)
+* Token is burnable. If you own tokens you can burn them. Burning reduces them from your balance and from the total token amount. (contract BurnableToken)
+
+### Functionality for crowdsale:
+* Crowdsale is owned by its creator. The creator is the only one with access to certain administrative functionality (contract Ownable)
+* Crowdsale has default crowdsale functionality (contract Crowdsale)
+* Only whitelisted accounts can participate in the crowdsale (contract WhitelistedCrowdsale)
+* Crowdsale is active only within a certain time frame and nobody can participate outside the active time (contract TimedCrowdsale)
+* If the crowdsale's sale period's soft cap is not met, all Ether accumulated withing the sale period is available for refund for the original participants. The refund has to be then excplicitly requested from the contract. (contracts RefundVault, RefundableCrowdsale, FinalizableCrowdsale)
+* Crowdsale does not allow purchases of tokens if the sale period's hard cap is exceeded (contract CappedCrowdsale)
+* It is possible for the contract owner to pause (and unpause) the crowdsale (contract Pausable)
+* Purchased tokens are not immediately delivered to the purchaser but the amount is stored internally. Tokens are then delivered later in batches to the purchasers. Also it is possible to use different rates (bonuses) per different sale phase within the sale period. (contract OwnTokenCrowdsale)
+* It is possible to define a rate (bonus) for the crowdsale sale period based on soft cap: the bonus is in effect only until soft cap is met. (contract OwnTokenCrowdsaleExtension)
 
 ## Smart contract inheritance architecture
 The smart contracts are layered with inheritance to add functionality. Inheritance of different smart contracts is implemented in the following order.

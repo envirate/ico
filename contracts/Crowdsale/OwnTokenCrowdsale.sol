@@ -28,8 +28,8 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable
 	// Rate for token purchases for phase 2
 	uint256 public phase2Rate;
 	
-	// Default rate for token purchases. Used if no other logic is in effect.
-	uint256 public defaultRate = 100;
+	// Default rate for token purchases. Used if no other logic is in effect. 1 Eth equals to this many tokens if decimals = 18.
+	uint256 public defaultRate = 100000;
 	
 	/**
      * @dev Initializes the crowdsale contract
@@ -129,7 +129,7 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable
 	  function _getTokenAmount(uint256 _weiAmount) internal view returns (uint256) {
 		//return _weiAmount.mul(rate);
 		
-		return _weiAmount.mul(rate).div(defaultRate);
+		return _weiAmount.mul(rate).div(100);
 	  }
 	
 }

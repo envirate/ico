@@ -15,7 +15,7 @@ contract OwnTokenCrowdsaleImpl is OwnTokenCrowdsale {
 	uint256 _closingTime	
   )
     public
-	OwnTokenCrowdsale(_wallet, _token, _hardcap, _softcap, _openingTime, _closingTime, (1 ether) / 10, 1000, 100, 1001, 100)
+	OwnTokenCrowdsale(_wallet, _token, _hardcap, _softcap, _openingTime, _closingTime, (1 ether) / 10, _closingTime, defaultRate, _closingTime, defaultRate)
   {
   }
 

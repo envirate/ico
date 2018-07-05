@@ -19,7 +19,6 @@ const RefundVault = artifacts.require('RefundVault');
 contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser]) {
   const rate = new BigNumber(2);
   const value = new BigNumber(ether(3));
-  const expectedTokenAmount = rate.mul(value);
   const hardcap = new BigNumber(ether(15));
   const softcap = new BigNumber(ether(9));
   
@@ -192,17 +191,6 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
 		this.openingTime + duration.weeks(interval * 1), phase1Rate,
 		this.closingTime + duration.weeks(interval * 2), phase2Rate).should.be.rejectedWith(EVMRevert);
-    });
-	
-	it('should not work with negative rates', async function () {
-	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
-		this.openingTime + duration.weeks(interval * 1), -1,
-		this.openingTime + duration.weeks(interval * 2), phase2Rate).should.be.rejectedWith(EVMRevert);
-	});	
-	it('should not work with negative rates 2', async function () {
-	  await CrowdsaleReal.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime, minInvestment,
-		this.openingTime + duration.weeks(interval * 1), phase1Rate,
-		this.openingTime + duration.weeks(interval * 2), -2).should.be.rejectedWith(EVMRevert);
     });
   });
   
