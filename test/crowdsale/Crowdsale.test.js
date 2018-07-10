@@ -16,9 +16,9 @@ const OwnToken = artifacts.require('OwnTokenMock');
 
 contract('Crowdsale', function ([origWallet, investor, wallet, purchaser]) {
 
-  const rate = new BigNumber(100000);
+  //const rate = new BigNumber(100000);
   const value = ether(3);
-  const expectedTokenAmount = value.mul(rate).div(100);
+  //const expectedTokenAmount = value.mul(rate);
 
   const hardcap = new BigNumber(ether(100));
   const softcap = new BigNumber(ether(10));
@@ -31,10 +31,13 @@ contract('Crowdsale', function ([origWallet, investor, wallet, purchaser]) {
   beforeEach(async function () {
     this.token = await OwnToken.new();
 	const supply = await this.token.INITIAL_SUPPLY();
+	
 	this.openingTime = latestTime() + duration.weeks(1);
     this.closingTime = this.openingTime + duration.weeks(1);
     this.afterClosingTime = this.closingTime + duration.seconds(1);
     this.crowdsale = await Crowdsale.new(wallet, this.token.address, hardcap, softcap, this.openingTime, this.closingTime);
+	this.rate = await this.crowdsale.defaultRate();
+	this.expectedTokenAmount = value.mul(this.rate);
 	await this.crowdsale.addManyToWhitelist([ origWallet, investor, wallet, purchaser ]);
 	await this.crowdsale.transferOwnership(investor);
     await this.token.transfer(this.crowdsale.address, supply);
@@ -56,14 +59,13 @@ contract('Crowdsale', function ([origWallet, investor, wallet, purchaser]) {
       event.args.purchaser.should.equal(investor);
       event.args.beneficiary.should.equal(investor);
       event.args.value.should.be.bignumber.equal(value);
-      event.args.amount.should.be.bignumber.equal(expectedTokenAmount);
+      event.args.amount.should.be.bignumber.equal(this.expectedTokenAmount);
     });
 
-    it('should not assign tokens to sender', async function () {
-		let balancePre = await this.token.balanceOf(investor);
+    it('should assign tokens to sender', async function () {
       await this.crowdsale.sendTransaction({ value: value, from: investor });
       let balance = await this.token.balanceOf(investor);
-      balance.should.be.bignumber.equal(balancePre);
+      balance.should.be.bignumber.equal(this.expectedTokenAmount);
     });
 
     it('should not forward funds to wallet', async function () {
@@ -82,17 +84,16 @@ contract('Crowdsale', function ([origWallet, investor, wallet, purchaser]) {
       event.args.purchaser.should.equal(purchaser);
       event.args.beneficiary.should.equal(investor);
       event.args.value.should.be.bignumber.equal(value);
-      event.args.amount.should.be.bignumber.equal(expectedTokenAmount);
+      event.args.amount.should.be.bignumber.equal(this.expectedTokenAmount);
     });
 
-    it('should not assign tokens to beneficiary', async function () {
-		const balancePre = await this.token.balanceOf(investor);
+    it('should assign tokens to beneficiary', async function () {
       await this.crowdsale.buyTokens(investor, { value, from: purchaser });
       const balance = await this.token.balanceOf(investor);
-      balance.should.be.bignumber.equal(balancePre);
+      balance.should.be.bignumber.equal(this.expectedTokenAmount);
     });
 
-    it('should not forward funds to wallet', async function () {
+	it('should not forward funds to wallet', async function () {
       const pre = web3.eth.getBalance(wallet);
       await this.crowdsale.buyTokens(investor, { value, from: purchaser });
       const post = web3.eth.getBalance(wallet);

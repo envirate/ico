@@ -26,7 +26,7 @@ contract('OwnTokenCrowdsaleExtension', function ([origWallet, investor, wallet, 
   const softCapRate = new BigNumber(100);
   
   function getTokenAmount(perRate, origTokens) {
-	  return (origTokens * perRate) / 100;
+	  return (origTokens * perRate);
   }
   
   before(async function () {
@@ -57,18 +57,18 @@ contract('OwnTokenCrowdsaleExtension', function ([origWallet, investor, wallet, 
       foundRate.should.be.bignumber.equal(softCapRate);
     });
 	
-    it('should assign tokens to sender internally correctly when soft cap not met', async function () {
+    it('should send tokens correctly when soft cap not met', async function () {
       await this.crowdsale.sendTransaction({ value: value, from: investor });
-      let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
+      let balance = await this.token.balanceOf(investor);
 	  
       balance.should.be.bignumber.equal(getTokenAmount(softCapRate, value));
     });
 	
-	it('should assign tokens to sender internally correctly when soft cap is met', async function () {
+	it('should send tokens correctly when soft cap is met', async function () {
 	  const foundRate = await this.crowdsale.defaultRate();
 	  await this.crowdsale.sendTransaction({ value: softcap, from: purchaser });
       await this.crowdsale.sendTransaction({ value: value, from: investor });
-      let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
+      let balance = await this.token.balanceOf(investor);
 	  
       balance.should.be.bignumber.equal(getTokenAmount(foundRate, value));
     });

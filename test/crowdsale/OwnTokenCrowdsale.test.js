@@ -25,12 +25,12 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
   const interval = new BigNumber(2);
   const minInvestment = ether(1) / 10;
   const phase1Length = duration.weeks(interval * 1);
-  const phase1Rate = new BigNumber(130);
+  const phase1Rate = new BigNumber(130000);
   const phase2Length = duration.weeks(interval * 2);
-  const phase2Rate = new BigNumber(125);
+  const phase2Rate = new BigNumber(125000);
   
   function getTokenAmount(perRate, origTokens) {
-	  return (origTokens * perRate) / 100;
+	  return (origTokens * perRate);
   }
   
   before(async function () {
@@ -48,8 +48,6 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 		this.openingTime + phase1Length, phase1Rate,
 		this.openingTime + phase2Length, phase2Rate);
 
-	
-	
 	await this.crowdsale.addManyToWhitelist([ origWallet, investor, wallet, purchaser ]);
     await this.token.transfer(this.crowdsale.address, supply);
 	
@@ -58,40 +56,16 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
   });
  
   describe('buing tokens', function () {
-	it('should start from zero', async function () {
-      let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
-      balance.should.be.bignumber.equal(0);
-    });
-	
-    it('should assign tokens to sender internally correctly for one purchase', async function () {
-      await this.crowdsale.sendTransaction({ value: value, from: investor });
-      let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
-	  
-      balance.should.be.bignumber.equal(getTokenAmount(phase1Rate, value));
-    });
-	
-	it('should assign tokens to sender internally correctly for multiple purchases', async function () {
-	  let newBuy = value.add(ether(1));
-      await this.crowdsale.sendTransaction({ value: value, from: investor });
-      await this.crowdsale.sendTransaction({ value: newBuy, from: investor });
-
-	  let firstBal = getTokenAmount(phase1Rate, value);
-	  let secondBal = getTokenAmount(phase1Rate, newBuy);
-
-	  let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
-      balance.should.be.bignumber.equal(firstBal + secondBal);
-    });
-	
-	it('should assign tokens to sender internally correctly for multiple purchases for multiple phases', async function () {
+	it('should send tokens to sender correctly for multiple purchases for multiple phases', async function () {
 	  let newBuy = value.sub(ether(1));
+	  let firstBal = getTokenAmount(phase1Rate, value);
+	  let secondBal = getTokenAmount(phase2Rate, newBuy);
+
       await this.crowdsale.sendTransaction({ value: value, from: investor });
 	  await increaseTimeTo(this.openingTime + phase1Length);
 	  await this.crowdsale.sendTransaction({ value: newBuy, from: investor });
 
-	  let firstBal = getTokenAmount(phase1Rate, value);
-	  let secondBal = getTokenAmount(phase2Rate, newBuy);
-
-	  let balance = await this.crowdsale.toBeReceivedTokenAmounts(investor);
+	  let balance = await this.token.balanceOf(investor);
       balance.should.be.bignumber.equal(firstBal + secondBal);
     });
 	
@@ -147,7 +121,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
       await this.crowdsale.sendTransaction({ value: minInv, from: investor }).should.be.fulfilled;
     });
 	
-	it('should allow with minimum purchase amount', async function () {
+	it('should allow with new minimum purchase amount', async function () {
 	  const oldMinInv = await this.crowdsale.minInvestment();
 	  const moreThanMin = oldMinInv.add(5);
 	  
@@ -204,9 +178,5 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	  (await this.crowdsale.phase2Rate()).should.be.bignumber.equal(phase2Rate);
     });
   });
-  
-
-  
-  
   
 });

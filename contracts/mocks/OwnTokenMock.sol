@@ -11,10 +11,10 @@ contract OwnTokenMock is OwnToken {
   string public constant symbol = "SIM"; // solium-disable-line uppercase
   uint8 public constant decimals = 18; // solium-disable-line uppercase
 
-  uint256 public constant INITIAL_SUPPLY = 10000 * (10 ** uint256(decimals));
+  uint256 public constant INITIAL_SUPPLY = 1 * (10 ** uint256(10)) * (10 ** uint256(decimals));
   
   constructor() 
-  OwnToken(1000, name, decimals, symbol)
+  OwnToken(INITIAL_SUPPLY, name, decimals, symbol)
   public {
 
       totalSupply = INITIAL_SUPPLY;
