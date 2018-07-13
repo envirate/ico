@@ -1,14 +1,13 @@
 pragma solidity ^0.4.24;
 
-import "./EIP20.sol";
-import "../../math/SafeMath.sol";
+import "./StandardToken.sol";
+
 
 /**
  * @title Burnable Token
  * @dev Token that can be irreversibly burned (destroyed).
  */
-contract BurnableToken is EIP20 {
-  using SafeMath for uint256;
+contract BurnableToken is StandardToken {
 
   event Burn(address indexed burner, uint256 value);
 
@@ -26,7 +25,7 @@ contract BurnableToken is EIP20 {
     // sender's balance is greater than the totalSupply, which *should* be an assertion failure
 
     balances[_who] = balances[_who].sub(_value);
-    totalSupply = totalSupply.sub(_value);
+    totalSupply_ = totalSupply_.sub(_value);
     emit Burn(_who, _value);
     emit Transfer(_who, address(0), _value);
   }

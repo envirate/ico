@@ -1,7 +1,6 @@
 pragma solidity ^0.4.24;
 
 import "../token/ERC20/OwnToken.sol";
-import "../token/ERC20/EIP20.sol";
 
 
 contract OwnTokenMock is OwnToken {
@@ -11,13 +10,13 @@ contract OwnTokenMock is OwnToken {
   string public constant symbol = "SIM"; // solium-disable-line uppercase
   uint8 public constant decimals = 18; // solium-disable-line uppercase
 
-  uint256 public constant INITIAL_SUPPLY = 1 * (10 ** uint256(10)) * (10 ** uint256(decimals));
+  uint256 public constant INITIAL_SUPPLY = (10 ** 8) * (10 ** uint256(decimals));
   
   constructor() 
   OwnToken(INITIAL_SUPPLY, name, decimals, symbol)
   public {
 
-      totalSupply = INITIAL_SUPPLY;
+      totalSupply_ = INITIAL_SUPPLY;
     balances[msg.sender] = INITIAL_SUPPLY;
     emit Transfer(0x0, msg.sender, INITIAL_SUPPLY);
   }

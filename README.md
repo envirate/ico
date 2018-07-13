@@ -55,13 +55,16 @@ The following functionality is implemented with these contracts (also noted with
 * It is possible to define a rate (bonus) for the crowdsale sale period based on soft cap: the bonus is in effect only until soft cap is met. (contract OwnTokenCrowdsaleExtension)
 
 ## Smart contract inheritance architecture
-The smart contracts are layered with inheritance to add functionality. Inheritance of different smart contracts is implemented in the following order.
+The smart contracts are layered with inheritance to add functionality in a structured way. Inheritance of different smart contracts is implemented in the following order.
 
 ### Token contracts
-* EIP20Interface
-	* EIP20
-		* BurnableToken
-			* OwnToken
+* ERC20Basic
+	* ERC20
+		* BasicToken
+			* StandardToken
+				* BurnableToken
+					* DetailedERC20
+						* OwnToken
 ### Crowdsale contracts
 * Ownable
 	* Crowdsale

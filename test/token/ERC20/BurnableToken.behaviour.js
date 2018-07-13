@@ -1,5 +1,5 @@
-import assertRevert from '../helpers/assertRevert';
-import { inLogs } from '../helpers/expectEvent';
+import assertRevert from '../../helpers/assertRevert';
+import { inLogs } from '../../helpers/expectEvent';
 
 const BigNumber = web3.BigNumber;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -33,9 +33,9 @@ export default function ([owner], initialBalance) {
 
       it('emits a transfer event', async function () {
         const event = await inLogs(this.logs, 'Transfer');
-        event.args._from.should.eq(owner);
-        event.args._to.should.eq(ZERO_ADDRESS);
-        event.args._value.should.be.bignumber.equal(amount);
+        event.args.from.should.eq(owner);
+        event.args.to.should.eq(ZERO_ADDRESS);
+        event.args.value.should.be.bignumber.equal(amount);
       });
     });
 
