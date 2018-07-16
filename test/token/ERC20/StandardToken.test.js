@@ -9,7 +9,7 @@ contract('StandardToken', function ([_, owner, recipient, anotherAccount]) {
   });
 
   describe('total supply', function () {
-    it('returns the total amount of tokens', async function () {
+    it('returns the total amount of tokens1', async function () {
       const totalSupply = await this.token.totalSupply();
 
       assert.equal(totalSupply, 100);
@@ -26,7 +26,7 @@ contract('StandardToken', function ([_, owner, recipient, anotherAccount]) {
     });
 
     describe('when the requested account has some tokens', function () {
-      it('returns the total amount of tokens', async function () {
+      it('returns the total amount of tokens2', async function () {
         const balance = await this.token.balanceOf(owner);
 
         assert.equal(balance, 100);

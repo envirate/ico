@@ -1,6 +1,7 @@
+/*
 var OwnTokenCrowdsale = artifacts.require("OwnTokenCrowdsale");
 
-contract('OwnTokenCrowdsale', function(accounts) {
+contract('calcSize', function(accounts) {
   it("get the size of the contract", function() {
     return OwnTokenCrowdsale.deployed().then(function(instance) {
       var bytecode = instance.constructor._json.bytecode;
@@ -14,8 +15,6 @@ contract('OwnTokenCrowdsale', function(accounts) {
   });
 });
 
-var OwnTokenCrowdsale = artifacts.require("./OwnTokenCrowdsale.sol");
-
 module.exports = function(deployer) {
   deployer.deploy(OwnTokenCrowdsale)
 
@@ -26,3 +25,4 @@ module.exports = function(deployer) {
     .then(() => OwnTokenCrowdsale.deployed())
     .then(_instance => console.log(_instance.address));
 };
+*/
