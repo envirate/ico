@@ -52,7 +52,9 @@ The following functionality is implemented with these contracts (also noted with
 * Crowdsale does not allow purchases of tokens if the sale period's hard cap is exceeded (contract CappedCrowdsale)
 * It is possible for the contract owner to pause (and unpause) the crowdsale (contract Pausable)
 * Purchased tokens are not immediately delivered to the purchaser but the amount is stored internally. Tokens are then delivered later in batches to the purchasers. Also it is possible to use different rates (bonuses) per different sale phase within the sale period. (contract OwnTokenCrowdsale)
+* All leftover tokens are burned at the end of a sale period. A sale period is only given the maximum amount of tokens it can theoretically distribute (soft cap * maximum bonus). All leftover tokens are burned automatically. (contract OwnTokenCrowdsale)
 * It is possible to define a rate (bonus) for the crowdsale sale period based on soft cap: the bonus is in effect only until soft cap is met. (contract OwnTokenCrowdsaleExtension)
+
 
 ## Smart contract inheritance architecture
 The smart contracts are layered with inheritance to add functionality in a structured way. Inheritance of different smart contracts is implemented in the following order.
@@ -84,7 +86,6 @@ The OpenZeppelin contracts are not modified with the following exceptions:
 - Changed inheritance order to simplify overrides
 - Disabled some functionality which is implemented differently in sub-contracts:
 --  The 'rate' functionality in Crowdsale.sol
-- Upgraded Solidity compiler version number
 
 Contracts *OwnTokenCrowdsale*, *OwnTokenCrowdsaleExtension* and *OwnToken* are the only contracts which are not from OpenZeppelin but are ours.
 
@@ -92,7 +93,7 @@ Contracts *OwnTokenCrowdsale*, *OwnTokenCrowdsaleExtension* and *OwnToken* are t
 OpenZeppelin contracts include sufficient unit tests. These unit tests are included as-is with the following exceptions:
 - Tests are changed to use our own basic crowdsale *OwnTokenCrowdsale* so that the inheritance integration is tested as well as individual functionalities.
 - Fixed tests to work with the new inherited functionalities (for example remembering to add the tests' wallets to whitelist so they have the right to make purchases)
-- Rewritten tests which use changed functionality (for example tokens are no longer delivered directly to the customer but are stored in a storage array in *OwnTokenCrowdsale*)
+- Rewritten tests which use changed functionality
 
 ## Disclaimer
 Use at your own risk. No support is promised but it can be requested.

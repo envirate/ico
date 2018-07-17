@@ -108,4 +108,17 @@ contract OwnTokenCrowdsale is CappedCrowdsale, Pausable
 			rate = defaultRate;
 		}
 	}
+	
+	/**
+   * @dev vault finalization task, called when owner calls finalize()
+   * Burn all leftover tokens
+   */
+  function finalization() internal {
+    super.finalization();
+	
+	uint256 myBal = token.balanceOf(address(this));
+	if (myBal > 0) {
+		token.burn(myBal);
+	}
+  }
 }

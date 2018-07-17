@@ -11,16 +11,16 @@ const should = require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
+//const Crowdsale = artifacts.require('OwnTokenCrowdsaleImpl');
 const CrowdsaleReal = artifacts.require('OwnTokenCrowdsale');
 const OwnToken = artifacts.require('OwnTokenMock');
 const RefundVault = artifacts.require('RefundVault');
 
 contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser]) {
   const rate = new BigNumber(2);
-  const value = new BigNumber(ether(3));
+  const value = new BigNumber(ether(2));
   const hardcap = new BigNumber(ether(15));
-  const softcap = new BigNumber(ether(9));
+  const softcap = new BigNumber(ether(4));
   
   const interval = new BigNumber(2);
   const minInvestment = ether(1) / 10;
@@ -54,8 +54,31 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	// start from the beginning of sales phases
 	await increaseTimeTo(this.openingTime);
   });
+  
+  describe('Finalization', function () {
+	
+	it('should burn leftover tokens correctly', async function () {
+	  let secondBal = getTokenAmount(phase1Rate, softcap);
+	  const supply = await this.token.INITIAL_SUPPLY();
+
+	  await this.crowdsale.sendTransaction({ value: softcap, from: investor });
+
+	  await increaseTimeTo(this.closingTime + duration.seconds(1));
+	  
+	  let balancePreFinalization = await this.token.balanceOf(this.crowdsale.address);
+
+	  balancePreFinalization.should.be.bignumber.equal(supply.minus(secondBal));
+	  
+	  await this.crowdsale.finalize();
+	  
+	  let balanceAfterFinalization = await this.token.balanceOf(this.crowdsale.address);
+	  balanceAfterFinalization.should.be.bignumber.equal(0);
+    });
+	
+  });
  
-  describe('buing tokens', function () {
+ 
+  describe('buying tokens', function () {
 	it('should send tokens to sender correctly for multiple purchases for multiple phases', async function () {
 	  let newBuy = value.sub(ether(1));
 	  let firstBal = getTokenAmount(phase1Rate, value);
@@ -70,8 +93,6 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
     });
 	
 	it('should allow refund if soft cap not met', async function () {
-	  
-	  const vault = await this.crowdsale.vault();
 	  
 	  const prePurcBal1 = web3.eth.getBalance(investor);
 	  const prePurcBal2 = web3.eth.getBalance(purchaser);
@@ -100,7 +121,7 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	  prePurcBal2.should.be.bignumber.equal(postBal2);
     });
   });
-  
+ 
   describe('when paused', function () {
     it('should not accept payments', async function () {
 	  await this.crowdsale.pause();
@@ -178,5 +199,6 @@ contract('OwnTokenCrowdsale', function ([origWallet, investor, wallet, purchaser
 	  (await this.crowdsale.phase2Rate()).should.be.bignumber.equal(phase2Rate);
     });
   });
+  
   
 });
